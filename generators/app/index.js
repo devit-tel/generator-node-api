@@ -10,9 +10,29 @@ const rimraf = require("rimraf");
 
 const compact = arr => arr.filter(f => f);
 
+const ENVS = {
+  DEVELOPMENT: "development",
+  STAGING: "staging",
+  PRODUCTION: "production"
+};
+
+const getK8Context = env => {
+  switch (env) {
+    case ENVS.DEVELOPMENT:
+      return "admin-sendit-dev-staging.k8s.local";
+    case ENVS.STAGING:
+      return "admin-sendit-dev-staging.k8s.local";
+    case ENVS.PRODUCTION:
+      return "sendit-prod.k8s.local";
+
+    default:
+      return "admin-sendit-dev-staging.k8s.local";
+  }
+};
+
 const generateDeployment = (env, props) => ({
   nodejs: {
-    replicaCount: env === "production" ? 3 : 1,
+    replicaCount: env === ENVS.PRODUCTION ? 3 : 1,
     nameOverride: `${env}-${props.projectName}`,
     imagePullSecrets: {
       name: "senditregistry"
@@ -142,11 +162,11 @@ const generateDeployment = (env, props) => ({
 
 const getOnly = (env, projectName) => {
   switch (env) {
-    case "development":
-      return ["development"];
-    case "staging":
+    case ENVS.DEVELOPMENT:
+      return [ENVS.DEVELOPMENT];
+    case ENVS.STAGING:
       return ["master"];
-    case "production":
+    case ENVS.PRODUCTION:
       return [`tags@sendit-th/${projectName}`];
     default:
       return [env];
@@ -170,14 +190,14 @@ const generateGitlabCI = props => ({
     "export DOCKER_API_VERSION=1.23 && docker login -u $DOCKER_USER -p $DOCKER_PASSWORD registry.dev.sendit.asia",
     "apk update && apk add ca-certificates wget && update-ca-certificates"
   ],
-  ...gitlabRunner("development", props),
-  ...gitlabRunner("staging", props),
-  ...gitlabRunner("production", props)
+  ...gitlabRunner(ENVS.DEVELOPMENT, props),
+  ...gitlabRunner(ENVS.STAGING, props),
+  ...gitlabRunner(ENVS.PRODUCTION, props)
 });
 
 const gitlabRunner = (env, props) => {
   const imageTag =
-    env === "production" ? "${CI_BUILD_TAG}" : `${env}-\${CI_COMMIT_SHA}`;
+    env === ENVS.PRODUCTION ? "${CI_BUILD_TAG}" : `${env}-\${CI_COMMIT_SHA}`;
   const imageName = `$CONTAINER_RELEASE_IMAGE:${imageTag}`;
   const only = getOnly(env, props.projectName);
   return {
@@ -199,7 +219,7 @@ const gitlabRunner = (env, props) => {
       before_script: [
         "mkdir ~/.kube",
         'echo -n "${KUBE_CONFIG}" | base64 -d > ~/.kube/config',
-        "kubectl config use-context sendit-prod.k8s.local",
+        `kubectl config use-context ${getK8Context(env)}`,
         "helm init --client-only"
       ],
       script: [
@@ -285,7 +305,7 @@ module.exports = class extends Generator {
 
   createDeployments() {
     if (this.props.enabledGitlabCI) {
-      for (const env of ["development", "staging", "production"]) {
+      for (const env of [ENVS.DEVELOPMENT, ENVS.STAGING, ENVS.PRODUCTION]) {
         const deploy = generateDeployment(env, this.props);
         this.fs.write(
           `${this.props.projectName}/deployment/values-${env}.yaml`,
