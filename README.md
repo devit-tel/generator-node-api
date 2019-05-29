@@ -6,14 +6,13 @@
 First, install [Yeoman](http://yeoman.io) and generator-sendit-th-generator-koa-api using [npm](https://www.npmjs.com/) (we assume you have pre-installed [node.js](https://nodejs.org/)).
 
 ```bash
-npm install -g yo
-npm install -g @sendit-th/generator-node-api
+npm install -g yo @sendit-th/generator-node-api
 ```
 
 Then generate your new project:
 
 ```bash
-yo node-api
+yo @sendit-th/node-api 
 ```
 
 ## Getting To Know Yeoman

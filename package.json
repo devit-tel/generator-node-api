@@ -1,11 +1,13 @@
 {
   "name": "@sendit-th/generator-node-api",
-  "version": "0.0.1",
-  "description": "",
-  "homepage": "",
-  "author": {
-    "name": "NV4RE"
+  "version": "0.0.2",
+  "description": "A boilerplate generator",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sendit-th/generator-node-api.git"
   },
+  "homepage": "https://github.com/sendit-th/generator-node-api#readme",
+  "author": "NV4RE",
   "files": [
     "generators"
   ],
@@ -70,5 +72,8 @@
     "pretest": "eslint .",
     "test": "jest"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sendit-th/generator-node-api/issues"
+  }
 }
