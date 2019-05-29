@@ -269,11 +269,17 @@ module.exports = class extends Generator {
     });
   }
 
-  cloneBoilerplate() {
+  async cloneBoilerplate() {
     this.log("Cloning: https://github.com/devit-tel/node-api-boilerplate.git");
-    return git.Clone.clone(
+    const repository = await git.Clone.clone(
       "https://github.com/devit-tel/node-api-boilerplate.git",
       this.props.projectName
+    );
+
+    return git.Remote.setUrl(
+      repository,
+      "origin",
+      `https://gitlab.com/sendit-th/${this.props.projectName}`
     );
   }
 
@@ -345,8 +351,8 @@ module.exports = class extends Generator {
 
   install() {
     this.log("Installing dependencies");
-    // this.npmInstall(undefined, undefined, {
-    //   cwd: path.join(process.cwd(), this.props.projectName)
-    // });
+    this.npmInstall(undefined, undefined, {
+      cwd: path.join(process.cwd(), this.props.projectName)
+    });
   }
 };
