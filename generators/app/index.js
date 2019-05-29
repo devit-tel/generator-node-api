@@ -220,7 +220,7 @@ module.exports = class extends Generator {
     const entryPath = `${this.props.projectName}/src/index.js`;
 
     const packageJson = this.fs.readJSON(packagePath);
-    const entryFile = this.fs.read(entryPath);
+    let entryFile = this.fs.read(entryPath);
 
     this.fs.copy(
       `${this.props.projectName}/.env.example`,
