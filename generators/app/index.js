@@ -2,6 +2,7 @@
 const Generator = require("yeoman-generator");
 const yaml = require("yaml");
 const uuid = require("uuid/v4");
+const fs = require("fs");
 const changeCase = require("change-case");
 const git = require("nodegit");
 const path = require("path");
@@ -195,7 +196,7 @@ module.exports = class extends Generator {
 
   cloneBoilerplate() {
     this.log("Cloning: https://github.com/devit-tel/node-api-boilerplate.git");
-    return git.Clone(
+    return git.Clone.clone(
       "https://github.com/devit-tel/node-api-boilerplate.git",
       this.props.projectName
     );
@@ -214,36 +215,56 @@ module.exports = class extends Generator {
   }
 
   writing() {
-    const packageJson = this.fs.readJSON("package.json");
+    const packagePath = `${this.props.projectName}/package.json`;
+    const entryPath = `${this.props.projectName}/src/index.js`;
+
+    const packageJson = this.fs.readJSON(packagePath);
+    const entryFile = this.fs.read(entryPath);
+
+    this.fs.copy(
+      `${this.props.projectName}/.env.local`,
+      `${this.props.projectName}/.env`
+    );
+
     if (!this.props.enabledConductor) {
       delete packageJson.dependencies["conductor-client"];
+      fs.unlinkSync(`${this.props.projectName}/src/libraries/conductor`);
+      entryFile.replace("import './libraries/conductor'", "");
     }
 
     if (!this.props.enabledElasticsearch) {
       delete packageJson.dependencies.elasticsearch;
+      fs.unlinkSync(`${this.props.projectName}/src/libraries/elasticsearch`);
     }
 
     if (!this.props.enabledMongoose) {
       delete packageJson.dependencies.mongoose;
       delete packageJson.dependencies["sendit-mongoose-repository"];
+      fs.unlinkSync(`${this.props.projectName}/src/libraries/mongoose`);
+      entryFile.replace("import './libraries/mongoose'", "");
     }
 
     if (!this.props.enabledRascal) {
       delete packageJson.dependencies.rascal;
+      fs.unlinkSync(`${this.props.projectName}/src/libraries/rascal`);
+      fs.unlinkSync(`${this.props.projectName}/src/constants/rascal`);
+      entryFile.replace("import './libraries/rascal'", "");
     }
 
     if (!this.props.enabledRedis) {
       delete packageJson.dependencies.redis;
       delete packageJson.dependencies.bluebird;
+      fs.unlinkSync(`${this.props.projectName}/src/libraries/redis`);
+      entryFile.replace("import './libraries/redis'", "");
     }
 
-    this.fs.writeJSON("package.json", packageJson);
+    fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
   }
 
   install() {
     this.log("Installing dependencies");
-    // This.npmInstall(undefined, undefined, {
-    //   cwd: path.join(process.cwd(), this.props.projectName)
-    // });
+    this.npmInstall(undefined, undefined, {
+      cwd: path.join(process.cwd(), this.props.projectName)
+    });
   }
 };
