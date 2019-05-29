@@ -1,6 +1,10 @@
 "use strict";
 const Generator = require("yeoman-generator");
-const fs = require("fs");
+const yaml = require("yaml");
+const uuid = require("uuid/v4");
+const changeCase = require("change-case");
+const git = require("nodegit");
+const path = require("path");
 
 const compact = arr => arr.filter(f => f);
 
@@ -28,6 +32,10 @@ const generateDeployment = (env, props) => ({
       {
         name: "KOA_PORT",
         value: "80"
+      },
+      {
+        name: "KOA_NAMESPACE",
+        value: uuid()
       },
       props.enabledMongoose
         ? {
@@ -137,7 +145,10 @@ module.exports = class extends Generator {
         type: "input",
         name: "projectName",
         message: "What's your project name?",
-        default: "node-api-boilerplate"
+        default: "node-api-boilerplate",
+        filter(words) {
+          return changeCase.paramCase(words);
+        }
       },
       {
         type: "confirm",
@@ -182,22 +193,57 @@ module.exports = class extends Generator {
     });
   }
 
+  cloneBoilerplate() {
+    this.log("Cloning: https://github.com/devit-tel/node-api-boilerplate.git");
+    return git.Clone(
+      "https://github.com/devit-tel/node-api-boilerplate.git",
+      this.props.projectName
+    );
+  }
+
   createDeployments() {
     if (this.props.enabledGitlabCI) {
       for (const env of ["development", "staging", "production"]) {
         const deploy = generateDeployment(env, this.props);
+        this.fs.write(
+          `${this.props.projectName}/deployment/values-${env}.yaml`,
+          yaml.stringify(deploy)
+        );
       }
     }
   }
 
   writing() {
-    this.fs.copy(
-      this.templatePath("dummyfile.txt"),
-      this.destinationPath("dummyfile.txt")
-    );
+    const packageJson = this.fs.readJSON("package.json");
+    if (!this.props.enabledConductor) {
+      delete packageJson.dependencies["conductor-client"];
+    }
+
+    if (!this.props.enabledElasticsearch) {
+      delete packageJson.dependencies.elasticsearch;
+    }
+
+    if (!this.props.enabledMongoose) {
+      delete packageJson.dependencies.mongoose;
+      delete packageJson.dependencies["sendit-mongoose-repository"];
+    }
+
+    if (!this.props.enabledRascal) {
+      delete packageJson.dependencies.rascal;
+    }
+
+    if (!this.props.enabledRedis) {
+      delete packageJson.dependencies.redis;
+      delete packageJson.dependencies.bluebird;
+    }
+
+    this.fs.writeJSON("package.json", packageJson);
   }
 
   install() {
-    // This.installDependencies();
+    this.log("Installing dependencies");
+    // This.npmInstall(undefined, undefined, {
+    //   cwd: path.join(process.cwd(), this.props.projectName)
+    // });
   }
 };
