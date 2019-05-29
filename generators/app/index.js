@@ -140,6 +140,79 @@ const generateDeployment = (env, props) => ({
   }
 });
 
+const getOnly = (env, projectName) => {
+  switch (env) {
+    case "development":
+      return ["development"];
+    case "staging":
+      return ["master"];
+    case "production":
+      return [`tags@sendit-th/${projectName}`];
+    default:
+      return env;
+  }
+};
+
+const generateGitlabCI = props => ({
+  image: "docker:latest",
+  services: ["docker:dind"],
+  stages: ["build", "deploy"],
+  cache: {
+    untracked: true
+  },
+  variables: {
+    CONTAINER_RELEASE_IMAGE:
+      "registry.dev.sendit.asia/sendit/4pl-oms-api-workflow-pub-sub",
+    DOCKER_DRIVER: "overlay"
+  },
+  before_script: [
+    "export DOCKER_API_VERSION=1.23 && docker login -u $DOCKER_USER -p $DOCKER_PASSWORD registry.dev.sendit.asia",
+    "apk update && apk add ca-certificates wget && update-ca-certificates"
+  ],
+  ...gitlabRunner("development", props),
+  ...gitlabRunner("staging", props),
+  ...gitlabRunner("production", props)
+});
+
+const gitlabRunner = (env, props) => {
+  const imageTag =
+    env === "production" ? "${CI_BUILD_TAG}" : "${CI_COMMIT_SHA}";
+  const imageName = `$CONTAINER_RELEASE_IMAGE:${imageTag}`;
+  const only = getOnly(env, props.projectName);
+  return {
+    [`${env}-push`]: {
+      stage: "build",
+      environment: env,
+      script: [
+        "docker pull $CONTAINER_RELEASE_IMAGE:stable || true",
+        `docker build --cache-from $CONTAINER_RELEASE_IMAGE:stable -t ${imageName} -f Dockerfile .`,
+        `docker push ${imageName}`
+      ],
+      tags: ["docker"],
+      only
+    },
+    [`${env}-deploy`]: {
+      image: "registry.gitlab.com/sendit-th/docker-base:kube",
+      stage: "deploy",
+      environment: env,
+      before_script: [
+        "mkdir ~/.kube",
+        'echo -n "${KUBE_CONFIG}" | base64 -d > ~/.kube/config',
+        "kubectl config use-context sendit-prod.k8s.local",
+        "helm init --client-only"
+      ],
+      script: [
+        "git clone https://$SENDIT_GITLAB_USERNAME:$SENDIT_GITLAB_PASSWORD@gitlab.com/sendit-th/sendit-infra-cluster.git /sendit-infra-cluster",
+        `helm upgrade -i ${
+          props.projectName
+        } /sendit-infra-cluster/helm-nodejs -f deployment/values-${env}.yaml --namespace=${env} --set nodejs.image.tag=${imageTag}`
+      ],
+      tags: ["docker"],
+      only
+    }
+  };
+};
+
 module.exports = class extends Generator {
   prompting() {
     const prompts = [
@@ -212,6 +285,10 @@ module.exports = class extends Generator {
           yaml.stringify(deploy)
         );
       }
+      this.fs.write(
+        `${this.props.projectName}/.gitlab-ci.yml`,
+        yaml.stringify(generateGitlabCI(this.props))
+      );
     }
   }
 

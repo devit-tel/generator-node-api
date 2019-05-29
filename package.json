@@ -63,7 +63,8 @@
       "node": true
     },
     "rules": {
-      "prettier/prettier": "error"
+      "prettier/prettier": "error",
+      "no-template-curly-in-string": "off"
     },
     "plugins": [
       "prettier"
