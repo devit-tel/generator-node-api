@@ -220,8 +220,7 @@ module.exports = class extends Generator {
     const entryPath = `${this.props.projectName}/src/index.js`;
 
     const packageJson = this.fs.readJSON(packagePath);
-    let entryFile = this.fs.read(entryPath);
-
+    let entryFile = this.fs.read(entryPath, { encode: "UTF-8" });
     this.fs.copy(
       `${this.props.projectName}/.env.example`,
       `${this.props.projectName}/.env`
@@ -235,13 +234,16 @@ module.exports = class extends Generator {
 
     if (!this.props.enabledElasticsearch) {
       delete packageJson.dependencies.elasticsearch;
-      entryFile = rimraf.sync(`${this.props.projectName}/src/libraries/elasticsearch`);
+      rimraf.sync(`${this.props.projectName}/src/libraries/elasticsearch`);
     }
 
     if (!this.props.enabledMongoose) {
       delete packageJson.dependencies.mongoose;
       delete packageJson.dependencies["sendit-mongoose-repository"];
       rimraf.sync(`${this.props.projectName}/src/libraries/mongoose`);
+      rimraf.sync(`${this.props.projectName}/src/models/example`);
+      rimraf.sync(`${this.props.projectName}/src/domains/example`);
+      rimraf.sync(`${this.props.projectName}/src/controllers/v1/example`);
       entryFile = entryFile.replace("import './libraries/mongoose'", "");
     }
 
