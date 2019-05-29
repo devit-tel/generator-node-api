@@ -222,7 +222,7 @@ module.exports = class extends Generator {
     const entryFile = this.fs.read(entryPath);
 
     this.fs.copy(
-      `${this.props.projectName}/.env.local`,
+      `${this.props.projectName}/.env.example`,
       `${this.props.projectName}/.env`
     );
 
