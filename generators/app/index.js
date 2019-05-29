@@ -299,7 +299,7 @@ module.exports = class extends Generator {
     return git.Remote.setUrl(
       repository,
       "origin",
-      `https://gitlab.com/sendit-th/${this.props.projectName}`
+      `https://gitlab.com/sendit-th/${this.props.projectName}.git`
     );
   }
 
