@@ -1,6 +1,6 @@
 {
   "name": "@sendit-th/generator-node-api",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A boilerplate generator",
   "repository": {
     "type": "git",

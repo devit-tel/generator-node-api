@@ -230,36 +230,37 @@ module.exports = class extends Generator {
     if (!this.props.enabledConductor) {
       delete packageJson.dependencies["conductor-client"];
       rimraf.sync(`${this.props.projectName}/src/libraries/conductor`);
-      entryFile.replace("import './libraries/conductor'", "");
+      entryFile = entryFile.replace("import './libraries/conductor'", "");
     }
 
     if (!this.props.enabledElasticsearch) {
       delete packageJson.dependencies.elasticsearch;
-      rimraf.sync(`${this.props.projectName}/src/libraries/elasticsearch`);
+      entryFile = rimraf.sync(`${this.props.projectName}/src/libraries/elasticsearch`);
     }
 
     if (!this.props.enabledMongoose) {
       delete packageJson.dependencies.mongoose;
       delete packageJson.dependencies["sendit-mongoose-repository"];
       rimraf.sync(`${this.props.projectName}/src/libraries/mongoose`);
-      entryFile.replace("import './libraries/mongoose'", "");
+      entryFile = entryFile.replace("import './libraries/mongoose'", "");
     }
 
     if (!this.props.enabledRascal) {
       delete packageJson.dependencies.rascal;
       rimraf.sync(`${this.props.projectName}/src/libraries/rascal`);
       rimraf.sync(`${this.props.projectName}/src/constants/rascal`);
-      entryFile.replace("import './libraries/rascal'", "");
+      entryFile = entryFile.replace("import './libraries/rascal'", "");
     }
 
     if (!this.props.enabledRedis) {
       delete packageJson.dependencies.redis;
       delete packageJson.dependencies.bluebird;
       rimraf.sync(`${this.props.projectName}/src/libraries/redis`);
-      entryFile.replace("import './libraries/redis'", "");
+      entryFile = entryFile.replace("import './libraries/redis'", "");
     }
 
     fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
+    fs.writeFileSync(entryPath, entryFile);
   }
 
   install() {
