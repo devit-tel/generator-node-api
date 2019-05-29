@@ -149,7 +149,7 @@ const getOnly = (env, projectName) => {
     case "production":
       return [`tags@sendit-th/${projectName}`];
     default:
-      return env;
+      return [env];
   }
 };
 
@@ -345,8 +345,8 @@ module.exports = class extends Generator {
 
   install() {
     this.log("Installing dependencies");
-    this.npmInstall(undefined, undefined, {
-      cwd: path.join(process.cwd(), this.props.projectName)
-    });
+    // this.npmInstall(undefined, undefined, {
+    //   cwd: path.join(process.cwd(), this.props.projectName)
+    // });
   }
 };
