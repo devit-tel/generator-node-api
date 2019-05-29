@@ -7,13 +7,13 @@ First, install [Yeoman](http://yeoman.io) and generator-sendit-th-generator-koa-
 
 ```bash
 npm install -g yo
-npm install -g generator-sendit-th-generator-koa-api
+npm install -g @sendit-th/generator-node-api
 ```
 
 Then generate your new project:
 
 ```bash
-yo sendit-th-generator-koa-api
+yo node-api
 ```
 
 ## Getting To Know Yeoman
