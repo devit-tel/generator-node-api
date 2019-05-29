@@ -13,7 +13,7 @@ const compact = arr => arr.filter(f => f);
 const generateDeployment = (env, props) => ({
   nodejs: {
     replicaCount: env === "production" ? 3 : 1,
-    nameOverride: props.projectName,
+    nameOverride: `${env}-${props.projectName}`,
     imagePullSecrets: {
       name: "senditregistry"
     },
@@ -177,7 +177,7 @@ const generateGitlabCI = props => ({
 
 const gitlabRunner = (env, props) => {
   const imageTag =
-    env === "production" ? "${CI_BUILD_TAG}" : "${CI_COMMIT_SHA}";
+    env === "production" ? "${CI_BUILD_TAG}" : `${env}-\${CI_COMMIT_SHA}`;
   const imageName = `$CONTAINER_RELEASE_IMAGE:${imageTag}`;
   const only = getOnly(env, props.projectName);
   return {
