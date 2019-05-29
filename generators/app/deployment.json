@@ -1,0 +1,84 @@
+{
+  "nodejs": {
+    "replicaCount": 1,
+    "nameOverride": "${PROJECT_NAME}",
+    "imagePullSecrets": {
+      "name": "${IMAGE_PULL_SECRETS}"
+    },
+    "image": {
+      "repository": "registry.dev.sendit.asia/sendit/${PROJECT_NAME}",
+      "pullPolicy": "Always"
+    },
+    "containerPorts": [
+      80
+    ],
+    "env": [
+      {
+        "name": "APP_NAME",
+        "value": "${PROJECT_NAME}"
+      },
+      {
+        "name": "NODE_ENV",
+        "value": "${NODE_ENV}"
+      },
+      {
+        "name": "KOA_PORT",
+        "value": "80"
+      },
+      {
+        "name": "MONGODB_URL",
+        "valueFrom": {
+          "secretKeyRef": {
+            "name": "node-api",
+            "key": "MONGODB_URL"
+          }
+        }
+      },
+      {
+        "name": "CONDUCTOR_BASEURL",
+        "valueFrom": {
+          "secretKeyRef": {
+            "name": "node-api",
+            "key": "CONDUCTOR_BASEURL"
+          }
+        }
+      },
+      {
+        "name": "AMQP_URLS",
+        "valueFrom": {
+          "secretKeyRef": {
+            "name": "node-api",
+            "key": "AMQP_URLS"
+          }
+        }
+      },
+      {
+        "name": "REDIS_HOST",
+        "valueFrom": {
+          "secretKeyRef": {
+            "name": "node-api",
+            "key": "REDIS_HOST"
+          }
+        }
+      }
+    ],
+    "workingDir": "/var/source",
+    "healthCheck": {
+      "httpGet": {
+        "path": "/system/health",
+        "port": 80
+      }
+    },
+    "type": "ClusterIP",
+    "default": {
+      "ports": [
+        {
+          "name": "${NODE_ENV}-${PROJECT_NAME}",
+          "externalPort": 80,
+          "internalPort": 80,
+          "protocol": "TCP"
+        }
+      ]
+    }
+  }
+}
