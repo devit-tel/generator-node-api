@@ -161,8 +161,9 @@ const generateGitlabCI = props => ({
     untracked: true
   },
   variables: {
-    CONTAINER_RELEASE_IMAGE:
-      "registry.dev.sendit.asia/sendit/4pl-oms-api-workflow-pub-sub",
+    CONTAINER_RELEASE_IMAGE: `registry.dev.sendit.asia/sendit/${
+      props.projectName
+    }`,
     DOCKER_DRIVER: "overlay"
   },
   before_script: [
@@ -203,7 +204,7 @@ const gitlabRunner = (env, props) => {
       ],
       script: [
         "git clone https://$SENDIT_GITLAB_USERNAME:$SENDIT_GITLAB_PASSWORD@gitlab.com/sendit-th/sendit-infra-cluster.git /sendit-infra-cluster",
-        `helm upgrade -i ${
+        `helm upgrade -i ${env}-${
           props.projectName
         } /sendit-infra-cluster/helm-nodejs -f deployment/values-${env}.yaml --namespace=${env} --set nodejs.image.tag=${imageTag}`
       ],
