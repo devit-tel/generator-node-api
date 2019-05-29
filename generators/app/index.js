@@ -6,6 +6,7 @@ const fs = require("fs");
 const changeCase = require("change-case");
 const git = require("nodegit");
 const path = require("path");
+const rimraf = require("rimraf");
 
 const compact = arr => arr.filter(f => f);
 
@@ -228,33 +229,33 @@ module.exports = class extends Generator {
 
     if (!this.props.enabledConductor) {
       delete packageJson.dependencies["conductor-client"];
-      fs.unlinkSync(`${this.props.projectName}/src/libraries/conductor`);
+      rimraf.sync(`${this.props.projectName}/src/libraries/conductor`);
       entryFile.replace("import './libraries/conductor'", "");
     }
 
     if (!this.props.enabledElasticsearch) {
       delete packageJson.dependencies.elasticsearch;
-      fs.unlinkSync(`${this.props.projectName}/src/libraries/elasticsearch`);
+      rimraf.sync(`${this.props.projectName}/src/libraries/elasticsearch`);
     }
 
     if (!this.props.enabledMongoose) {
       delete packageJson.dependencies.mongoose;
       delete packageJson.dependencies["sendit-mongoose-repository"];
-      fs.unlinkSync(`${this.props.projectName}/src/libraries/mongoose`);
+      rimraf.sync(`${this.props.projectName}/src/libraries/mongoose`);
       entryFile.replace("import './libraries/mongoose'", "");
     }
 
     if (!this.props.enabledRascal) {
       delete packageJson.dependencies.rascal;
-      fs.unlinkSync(`${this.props.projectName}/src/libraries/rascal`);
-      fs.unlinkSync(`${this.props.projectName}/src/constants/rascal`);
+      rimraf.sync(`${this.props.projectName}/src/libraries/rascal`);
+      rimraf.sync(`${this.props.projectName}/src/constants/rascal`);
       entryFile.replace("import './libraries/rascal'", "");
     }
 
     if (!this.props.enabledRedis) {
       delete packageJson.dependencies.redis;
       delete packageJson.dependencies.bluebird;
-      fs.unlinkSync(`${this.props.projectName}/src/libraries/redis`);
+      rimraf.sync(`${this.props.projectName}/src/libraries/redis`);
       entryFile.replace("import './libraries/redis'", "");
     }
 
