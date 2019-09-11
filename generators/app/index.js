@@ -35,7 +35,7 @@ const generateDeployment = (env, props) => ({
   replicaCount: env === ENVS.PRODUCTION ? 3 : 1,
   nameOverride: `${env}-${props.projectName}`,
   image: {
-    repository: `registry.dev.sendit.asia/sendit/${props.projectName}`,
+    repository: `registry.dev.true-e-logistics.com/sendit/${props.projectName}`,
     pullPolicy: "Always"
   },
   imagePullSecrets: {
@@ -217,7 +217,7 @@ const generateGitlabCI = props => ({
     DOCKER_DRIVER: "overlay"
   },
   before_script: [
-    "export DOCKER_API_VERSION=1.23 && docker login -u $DOCKER_USER -p $DOCKER_PASSWORD registry.dev.sendit.asia",
+    "export DOCKER_API_VERSION=1.23 && docker login -u $DOCKER_USER -p $DOCKER_PASSWORD registry.dev.true-e-logistics.com",
     "apk update && apk add ca-certificates wget && update-ca-certificates"
   ],
   ...gitlabRunner(ENVS.DEVELOPMENT, props),
