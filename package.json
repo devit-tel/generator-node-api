@@ -1,6 +1,6 @@
 {
   "name": "@sendit-th/generator-node-api",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A boilerplate generator",
   "repository": {
     "type": "git",
@@ -11,7 +11,7 @@
   "files": [
     "generators"
   ],
-  "main": "generators/index.js",
+  "main": "generators/app/index.js",
   "keywords": [
     "boilerplate",
     "yeoman-generator"
