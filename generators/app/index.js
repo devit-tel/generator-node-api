@@ -256,7 +256,7 @@ const gitlabRunner = (env, props) => {
         "git clone https://$SENDIT_GITLAB_USERNAME:$SENDIT_GITLAB_PASSWORD@gitlab.com/sendit-th/sendit-infra-cluster.git /sendit-infra-cluster",
         `helm upgrade -i ${env}-${
           props.projectName
-        } /sendit-infra-cluster/helm-nodejs -f deployment/values-${env}.yaml --namespace=${env} --set nodejs.image.tag=${imageTag}`
+        } /sendit-infra-cluster/helm-generic-deployment -f deployment/values-${env}.yaml --namespace=${env} --set image.tag=${imageTag}`
       ],
       tags: ["docker"],
       only
