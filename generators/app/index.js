@@ -31,133 +31,163 @@ const getK8Context = env => {
 };
 
 const generateDeployment = (env, props) => ({
-  nodejs: {
-    replicaCount: env === ENVS.PRODUCTION ? 3 : 1,
-    nameOverride: `${env}-${props.projectName}`,
-    imagePullSecrets: {
-      name: "senditregistry"
+  kind: "Deployment",
+  replicaCount: env === ENVS.PRODUCTION ? 3 : 1,
+  nameOverride: `${env}-${props.projectName}`,
+  image: {
+    repository: `registry.dev.sendit.asia/sendit/${props.projectName}`,
+    pullPolicy: "Always"
+  },
+  imagePullSecrets: {
+    name: "telregistry"
+  },
+  terminationGracePeriodSeconds: 60,
+  containerPorts: [
+    {
+      containerPort: 80,
+      protocol: "TCP"
+    }
+  ],
+  env: compact([
+    {
+      name: "APP_NAME",
+      value: props.projectName
     },
-    image: {
-      repository: `registry.dev.sendit.asia/sendit/${props.projectName}`,
-      pullPolicy: "Always"
+    {
+      name: "NODE_ENV",
+      value: env
     },
-    containerPorts: [80],
-    env: compact([
-      {
-        name: "APP_NAME",
-        value: props.projectName
-      },
-      {
-        name: "NODE_ENV",
-        value: env
-      },
-      {
-        name: "KOA_PORT",
-        value: "80"
-      },
-      {
-        name: "KOA_NAMESPACE",
-        value: uuid()
-      },
-      props.enabledMongoose
-        ? {
-            name: "MONGODB_ENABLED",
-            value: "true"
-          }
-        : null,
-      props.enabledMongoose
-        ? {
-            name: "MONGODB_URL",
-            valueFrom: {
-              secretKeyRef: {
-                name: "node-api",
-                key: "MONGODB_URL"
-              }
+    {
+      name: "KOA_PORT",
+      value: "80"
+    },
+    {
+      name: "KOA_NAMESPACE",
+      value: uuid()
+    },
+    props.enabledMongoose
+      ? {
+          name: "MONGODB_ENABLED",
+          value: "true"
+        }
+      : null,
+    props.enabledMongoose
+      ? {
+          name: "MONGODB_URL",
+          valueFrom: {
+            secretKeyRef: {
+              name: "node-api",
+              key: "MONGODB_URL"
             }
           }
-        : null,
-      props.enabledConductor
-        ? {
-            name: "CONDUCTOR_ENABLED",
-            value: "true"
-          }
-        : null,
-      props.enabledConductor
-        ? {
-            name: "CONDUCTOR_BASEURL",
-            valueFrom: {
-              secretKeyRef: {
-                name: "node-api",
-                key: "CONDUCTOR_BASEURL"
-              }
+        }
+      : null,
+    props.enabledConductor
+      ? {
+          name: "CONDUCTOR_ENABLED",
+          value: "true"
+        }
+      : null,
+    props.enabledConductor
+      ? {
+          name: "CONDUCTOR_BASEURL",
+          valueFrom: {
+            secretKeyRef: {
+              name: "node-api",
+              key: "CONDUCTOR_BASEURL"
             }
           }
-        : null,
-      props.enabledRascal
-        ? {
-            name: "RASCAL_ENABLED",
-            value: "true"
-          }
-        : null,
-      props.enabledRascal
-        ? {
-            name: "AMQP_URLS",
-            valueFrom: {
-              secretKeyRef: {
-                name: "node-api",
-                key: "AMQP_URLS"
-              }
+        }
+      : null,
+    props.enabledRascal
+      ? {
+          name: "RASCAL_ENABLED",
+          value: "true"
+        }
+      : null,
+    props.enabledRascal
+      ? {
+          name: "AMQP_URLS",
+          valueFrom: {
+            secretKeyRef: {
+              name: "node-api",
+              key: "AMQP_URLS"
             }
           }
-        : null,
-      props.enabledRedis
-        ? {
-            name: "REDIS_ENABLED",
-            value: "true"
-          }
-        : null,
-      props.enabledRedis
-        ? {
-            name: "REDIS_HOST",
-            valueFrom: {
-              secretKeyRef: {
-                name: "node-api",
-                key: "REDIS_HOST"
-              }
+        }
+      : null,
+    props.enabledRedis
+      ? {
+          name: "REDIS_ENABLED",
+          value: "true"
+        }
+      : null,
+    props.enabledRedis
+      ? {
+          name: "REDIS_HOST",
+          valueFrom: {
+            secretKeyRef: {
+              name: "node-api",
+              key: "REDIS_HOST"
             }
           }
-        : null,
-      props.enabledElasticsearch
-        ? {
-            name: "ELASTICSEARCH_HOST",
-            valueFrom: {
-              secretKeyRef: {
-                name: "node-api",
-                key: "ELASTICSEARCH_HOST"
-              }
+        }
+      : null,
+    props.enabledElasticsearch
+      ? {
+          name: "ELASTICSEARCH_HOST",
+          valueFrom: {
+            secretKeyRef: {
+              name: "node-api",
+              key: "ELASTICSEARCH_HOST"
             }
           }
-        : null
-    ]),
-    workingDir: "/var/source",
-    healthCheck: {
+        }
+      : null
+  ]),
+  workingDir: "/var/source",
+  healthCheck: {
+    enabled: true,
+    readinessProbe: {
+      httpGet: {
+        path: "/system/health",
+        port: 80,
+        initialDelaySeconds: 5,
+        timeoutSeconds: 1,
+        periodSeconds: 30,
+        successThreshold: 1,
+        failureThreshold: 3
+      }
+    },
+    livenessProbe: {
       httpGet: {
         path: "/system/health",
         port: 80
-      }
-    },
-    type: "ClusterIP",
-    default: {
+      },
+      initialDelaySeconds: 300,
+      timeoutSeconds: 10,
+      periodSeconds: 60,
+      successThreshold: 1,
+      failureThreshold: 3
+    }
+  },
+  services: [
+    {
+      type: "ClusterIP",
       ports: [
         {
           name: `${env}-${props.projectName}`,
-          externalPort: 80,
-          internalPort: 80,
-          protocol: "TCP"
+          protocol: "TCP",
+          port: 80,
+          targetPort: 80
         }
       ]
     }
-  }
+  ],
+  serviceHostNetwork: {
+    enabled: false
+  },
+  nodeSelectorOverride: true
 });
 
 const getOnly = (env, projectName) => {
@@ -181,7 +211,7 @@ const generateGitlabCI = props => ({
     untracked: true
   },
   variables: {
-    CONTAINER_RELEASE_IMAGE: `registry.dev.sendit.asia/sendit/${
+    CONTAINER_RELEASE_IMAGE: `registry.dev.true-e-logistics.com/sendit/${
       props.projectName
     }`,
     DOCKER_DRIVER: "overlay"
